@@ -77,7 +77,17 @@ Windows 11 的「Windows 安全中心」询问卡片（防火墙放行、应用�
 
 ## 安装
 
-### 方式一：随 profile 挂载（推荐）
+### 方式零：从 GitHub 直接安装（推荐）
+
+```bash
+dsh plugin --profile <profile> add github:LuBite/dsh-dialog-watcher
+```
+
+> **DSH Desktop（桌面端）** 请在应用内 **设置 → 插件** 里安装。桌面端的 profile 由应用独占管理，命令行改不了它。
+
+---
+
+### 方式一：随 profile 挂载（本地开发）
 
 1. 把本目录放进 profile 的 `node_modules`：
 
