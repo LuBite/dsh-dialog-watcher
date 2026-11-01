@@ -1,0 +1,13 @@
+# dsh-dialog-watcher bundle patch
+#
+# This file is the `dsh.bundle.patch` layer of the package: when the package
+# is listed in `dsh.profile.bundles`, the profile boot merges this patch (a
+# single `insert` of the plugin row) into the cordis tree. The row's `name`
+# equals the package name so the client module registry matches its loader
+# entry and serves the client bundle at /plugins/dsh-dialog-watcher/client.js.
+#
+# For a live install without a web restart, the same insert row can be placed
+# directly in the profile's cordis.patch.yml (config HMR applies it live).
+- insert:
+    - id: dsh-dialog-watcher
+      name: 'dsh-dialog-watcher'
