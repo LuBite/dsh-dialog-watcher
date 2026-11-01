@@ -953,6 +953,15 @@ public static class Probe {
         sb.Append(",\"kind\":\"").Append(kind).Append('"');
         sb.Append(",\"smartScreen\":").Append(smart ? "true" : "false");
         sb.Append(",\"smartScreenApp\":\"").Append(J.S(uia == null ? "" : uia.SmartScreenApp)).Append('"');
+        // A window whose own process carries DSH_SESSION_ID was spawned by that
+        // session's command chain: the marker is injected into every session
+        // command and inherited by the whole process tree. Reading it here needs
+        // no command-text matching - which is exactly what run_code source,
+        // arbitrary tool arguments and cascaded spawns defeat.
+        string selfSid = ReadEnvSessionId(pid);
+        if (selfSid != null && selfSid.Length > 0) {
+            sb.Append(",\"selfSession\":\"").Append(J.S(selfSid)).Append('"');
+        }
         // Interceptors (firewall / UAC / SmartScreen / AV) own the window, so
         // their exe says nothing about WHO caused it. The blocked program and
         // the command chain that spawned it carry DSH_SESSION_ID; list them so

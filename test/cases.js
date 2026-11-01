@@ -95,6 +95,7 @@ function win(hwnd, opts = {}) {
     // Interceptor-dialog extras reported by the probe.
     interceptor: Boolean(opts.interceptor),
     sessionProcs: opts.sessionProcs || [],
+    selfSession: opts.selfSession || "",
   };
 }
 
@@ -567,6 +568,21 @@ test("T1 strong notice may state attribution and lists buttons", () => {
   assert.match(text, /dialog_action/);
 });
 
+test("T1b every notice carries the window handle dialog_action needs", () => {
+  const ev = win("0x2A15B6", { title: "T" });
+  // dialog_action rejects anything that is not 0x-prefixed and probe-reported,
+  // so a notice that omits the handle makes the tool unusable.
+  for (const text of [
+    strongNotice(ev, "x"),
+    mediumNotice(ev, "x"),
+    smartScreenNotice(ev, "x"),
+    systemConsentNotice(ev, "x", false),
+    systemConsentNotice(ev, "x", true),
+  ]) {
+    assert.match(text, /- 窗口句柄：0x2A15B6/);
+  }
+});
+
 test("T2 medium notice stays tentative (never asserts causality)", () => {
   const ev = win("0x17", { exe: "C:\\x\\foo.exe", title: "Foo 遇到问题" });
   const text = mediumNotice(ev, "时间线索", { commandA: "npm run build", commandB: "npm run test" });
@@ -629,6 +645,40 @@ test("T8 positional consent buttons are graded by side, not by unknown text", ()
   assert.match(lines, /像素坐标 213,531/);
   assert.ok(!/Win32 hwnd 0x0/.test(lines), "pixel buttons must not claim a Win32 hwnd");
   assert.equal(kindLabel({ kind: "system-consent" }), "系统安全询问");
+});
+
+test("S1 a window process carrying DSH_SESSION_ID is a strong self-session hit", () => {
+  const { ledger } = makeLedger();
+  const a = makeAttributor(ledger);
+  const d = a.receive(win("0xS1", { exe: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", selfSession: "session-abc123" }), 16_000);
+  assert.equal(d.action, "inject-strong");
+  assert.equal(d.level, "strong");
+  assert.equal(d.sessionId, "abc123", "session- prefix is normalized away");
+  assert.match(d.evidence, /带会话标记/);
+});
+
+test("S2 no selfSession falls through to the normal ladder", () => {
+  const { ledger } = makeLedger();
+  const a = makeAttributor(ledger);
+  const d = a.receive(win("0xS2", { exe: "C:\\x\\thing.exe", selfSession: "" }), 16_000);
+  assert.notEqual(d.action, "inject-strong");
+});
+
+test("S3 an interceptor window is unaffected: its own process has no marker", () => {
+  const { ledger } = makeLedger();
+  const a = makeAttributor(ledger);
+  const ev = win("0xS3", { exe: "C:\\Windows\\System32\\PickerHost.exe", interceptor: true, selfSession: "",
+    sessionProcs: [{ pid: 900, exe: "bash.exe", createMs: 10_000, sessionId: "session-abc123" }] });
+  const d = a.receive(ev, 16_000);
+  assert.equal(d.action, "inject-strong");
+  assert.match(d.evidence, /拦截类弹窗/);
+});
+
+test("S4 a user-launched app (no marker) never becomes self-session", () => {
+  const { ledger } = makeLedger();
+  const a = makeAttributor(ledger);
+  const d = a.receive(win("0xS4", { exe: "C:\\Program Files\\WeChat\\WeChat.exe", selfSession: "" }), 16_000);
+  assert.ok(d.level !== "strong", "a process without the marker must not be attributed");
 });
 
 // -------------------------------------------- attribution edge cases -------
