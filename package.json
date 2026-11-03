@@ -1,6 +1,6 @@
 {
   "name": "dsh-dialog-watcher",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Windows blocking-dialog watcher for DSH. Resident probe (PowerShell + C#, Win32 EnumWindows + UIA), session-command ledger, window->session attribution with strong/medium/weak levels and a two-command/two-dialog confirmation state machine, steer-based injection under source kind plugin:dialog-watcher, model-driven dialog_action clicker (UIA Invoke then Win32 BM_CLICK, never activates the window or steals focus), and a web UI toggle panel anchored under the dtt-bar. Probe and click default to ON; disabling the probe disables clicking and stops the probe process with zero residue.",
   "type": "module",
   "main": "lib/index.js",

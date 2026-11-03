@@ -828,6 +828,65 @@ test("an ordinary dialog is unaffected by the interceptor branch", () => {
 
 // ---------------------------------------------------------------- report ---
 
+// ---- U3: the owner chain must respect the command's time window ----
+
+test("C15b owner chain ignores a hit whose interval does not cover the dialog", () => {
+  const { ledger, job } = makeLedger();
+  job("A", "j1", "python build.py", 10_000, 20_000);
+  const a = makeAttributor(ledger);
+  const d = a.receive(
+    win("0xOC1", {
+      exe: "C:\\Windows\\SysWOW64\\msiexec.exe",
+      procCreateMs: 999_000,
+      ownerExe: "C:\\Python312\\python.exe",
+      firstSeenMs: 999_500,
+    }),
+    999_500
+  );
+  assert.notEqual(d.action, "inject-strong", "an old command must not claim a dialog that appeared much later");
+});
+
+test("C15c a bare word inside the command text is not a launch", () => {
+  const { ledger, job } = makeLedger();
+  job("A", "j1", "echo chrome is a browser", 10_000, 20_000);
+  const a = makeAttributor(ledger);
+  const d = a.receive(
+    win("0xOC2", {
+      exe: "C:\\Windows\\SysWOW64\\msiexec.exe",
+      procCreateMs: 15_000,
+      ownerExe: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      firstSeenMs: 16_000,
+    }),
+    16_000
+  );
+  assert.notEqual(d.action, "inject-strong", "mentioning chrome mid-command must not attribute Chrome dialogs");
+});
+
+test("C15d owner chain still fires when the interval covers the dialog", () => {
+  const { ledger, job } = makeLedger();
+  job("A", "j1", "python build.py", 10_000, 20_000);
+  const a = makeAttributor(ledger);
+  const d = a.receive(
+    win("0xOC3", {
+      exe: "C:\\Windows\\SysWOW64\\msiexec.exe",
+      procCreateMs: 15_000,
+      ownerExe: "C:\\Python312\\python.exe",
+      firstSeenMs: 16_000,
+    }),
+    16_000
+  );
+  assert.equal(d.action, "inject-strong");
+  assert.equal(d.how, "owner-chain");
+});
+
+test("C15e ledgerExeHits returns every matching interval, not just the first", () => {
+  const { ledger, job } = makeLedger();
+  job("A", "j1", "python a.py", 10_000, 20_000);
+  job("A", "j2", "python b.py", 100_000, 110_000);
+  const hits = ledger.ledgerExeHits("python.exe");
+  assert.ok(hits.length >= 2, "both intervals must be returned, got " + hits.length);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {
   for (const f of failures) {
