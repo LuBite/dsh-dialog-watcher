@@ -1,7 +1,7 @@
 {
   "name": "dsh-dialog-watcher",
   "version": "1.1.2",
-  "description": "Windows blocking-dialog watcher for DSH. Resident probe (PowerShell + C#, Win32 EnumWindows + UIA), session-command ledger, window->session attribution with strong/medium/weak levels and a two-command/two-dialog confirmation state machine, steer-based injection under source kind plugin:dialog-watcher, model-driven dialog_action clicker (UIA Invoke then Win32 BM_CLICK, never activates the window or steals focus), and a web UI toggle panel anchored under the dtt-bar. Probe and click default to ON; disabling the probe disables clicking and stops the probe process with zero residue.",
+  "description": "让 DSH 知道「你跑的东西卡在一个 Windows 弹窗上了」。常驻检测桌面阻塞弹窗（错误框 / SmartScreen / 安装向导 / 凭据请求 / 系统询问卡片），判定它由哪个会话的命令引起，把一条事件提醒注入该会话；模型据此判断，并可用 dialog_action 代点按钮——不抢前台、不激活窗口。\n\nA Windows blocking-dialog watcher for DSH: resident detection of error boxes, SmartScreen prompts, installers, credential requests and system consent cards; attributes each dialog to the session whose command raised it and injects a structured notice; the model can then decide and click buttons via dialog_action without stealing focus or activating the window.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -15,6 +15,7 @@
     "cordis.patch.yml",
     "docs",
     "README.md",
+    "README.en.md",
     "LICENSE"
   ],
   "dsh": {
